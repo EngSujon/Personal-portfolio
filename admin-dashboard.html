@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sujon Sorma — Website Admin Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0404; --bg-alt:#120707; --panel:#170909; --panel-2:#1d0a0a;
+    --red:#e5121c; --red-bright:#ff3b44; --deep-red:#5c0910;
+    --line:#331111; --line-bright:#5c1a1c;
+    --text:#f5ecea; --text-dim:#c2a3a1; --text-faint:#7d5c5a;
+    --ok:#37c977; --ease:cubic-bezier(.2,.7,.2,1);
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'Inter',sans-serif;
+    line-height:1.6; padding:32px 20px 130px; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px; margin:0 auto;}
+  h1{font-size:clamp(26px,4vw,36px); font-weight:900; letter-spacing:-0.01em; margin-bottom:6px;}
+  h1 span{color:var(--red-bright);}
+  .sub{color:var(--text-dim); font-size:14.5px; margin-bottom:34px; max-width:720px;}
+  code{background:var(--panel-2); border:1px solid var(--line); border-radius:3px; padding:1px 6px; font-size:0.9em;}
+  .step{
+    background:var(--panel); border:1px solid var(--line); border-radius:8px;
+    padding:26px 28px; margin-bottom:22px;
+  }
+  .step-head{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+  .step-num{
+    width:28px; height:28px; border-radius:50%; background:var(--red);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0;
+  }
+  .step h2{font-size:17px; font-weight:800;}
+  .step p.desc{color:var(--text-dim); font-size:13.5px; margin-bottom:16px;}
+  .dropzone{
+    border:2px dashed var(--line-bright); border-radius:6px; padding:30px 20px; text-align:center;
+    cursor:pointer; transition:border-color .2s, background .2s; color:var(--text-dim); font-size:14px;
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--red-bright); background:rgba(229,18,28,0.06); color:var(--text);}
+  .dropzone b{color:var(--red-bright);}
+  input[type=file]{display:none;}
+  .file-status{margin-top:14px; font-size:13.5px; display:flex; align-items:center; gap:8px;}
+  .file-status .dot{width:8px; height:8px; border-radius:50%; background:var(--ok); flex-shrink:0;}
+  .file-status.empty .dot{background:var(--text-faint);}
+  .file-status.err .dot{background:var(--red-bright);}
+  .tabs{display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap;}
+  .tab{
+    padding:10px 16px; border-radius:5px; border:1px solid var(--line-bright); font-size:13px;
+    font-weight:700; cursor:pointer; color:var(--text-dim); background:transparent; transition:all .2s;
+  }
+  .tab.active{background:var(--red); border-color:var(--red); color:#fff;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .card-item{
+    background:var(--panel-2); border:1px solid var(--line); border-radius:6px;
+    padding:18px 20px; margin-bottom:14px; position:relative;
+  }
+  .row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:10px;}
+  .row.r3{grid-template-columns:1fr 1fr 1fr;}
+  @media(max-width:700px){ .row, .row.r3{grid-template-columns:1fr;} }
+  .field{display:flex; flex-direction:column; gap:6px;}
+  .field.full{grid-column:1/-1;}
+  label{font-size:11.5px; font-weight:700; letter-spacing:0.05em; text-transform:uppercase; color:var(--text-faint);}
+  input[type=text], input[type=url], textarea, select{
+    background:var(--bg-alt); border:1px solid var(--line-bright); border-radius:4px;
+    padding:10px 12px; color:var(--text); font-size:13.5px; font-family:inherit; width:100%;
+  }
+  input:focus, textarea:focus, select:focus{outline:none; border-color:var(--red-bright);}
+  textarea{resize:vertical; min-height:56px;}
+  .card-toolbar{display:flex; gap:8px; justify-content:flex-end; margin-top:8px; flex-wrap:wrap;}
+  .icon-btn{
+    background:transparent; border:1px solid var(--line-bright); color:var(--text-dim);
+    border-radius:4px; padding:6px 11px; font-size:12px; font-weight:700; cursor:pointer; transition:all .2s;
+  }
+  .icon-btn:hover{border-color:var(--red-bright); color:var(--red-bright);}
+  .icon-btn.danger:hover{border-color:var(--red); color:var(--red); background:rgba(229,18,28,0.08);}
+  .thumb-preview{width:100%; max-width:180px; border-radius:4px; margin-top:8px; border:1px solid var(--line); background:#fff;}
+  .thumb-preview.dark{background:#0c1f3d;}
+  .add-row{
+    width:100%; padding:14px; border:1px dashed var(--line-bright); border-radius:6px;
+    background:transparent; color:var(--text-dim); font-weight:700; font-size:13.5px; cursor:pointer;
+    transition:all .2s;
+  }
+  .add-row:hover{border-color:var(--red-bright); color:var(--red-bright);}
+  .settings-grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  .settings-grid .field.full{grid-column:1/-1;}
+  @media(max-width:700px){ .settings-grid{grid-template-columns:1fr;} }
+  .gen-bar{
+    position:fixed; left:0; right:0; bottom:0; z-index:50;
+    background:rgba(10,4,4,0.92); backdrop-filter:blur(10px);
+    border-top:1px solid var(--line); padding:16px 20px;
+    display:flex; align-items:center; justify-content:center; gap:16px; flex-wrap:wrap;
+  }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; padding:14px 26px; font-size:14px; font-weight:800;
+    border-radius:4px; border:1px solid transparent; cursor:pointer; transition:all .2s var(--ease); font-family:inherit;
+  }
+  .btn-primary{background:var(--red); color:#fff;}
+  .btn-primary:hover{background:var(--red-bright); transform:translateY(-1px);}
+  .btn-primary:disabled{background:var(--line-bright); color:var(--text-faint); cursor:not-allowed; transform:none;}
+  .gen-status{font-size:13px; color:var(--text-dim);}
+  .badge-count{
+    display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px;
+    background:var(--red); color:#fff; border-radius:10px; font-size:11px; font-weight:800; padding:0 6px; margin-left:4px;
+  }
+  .note{
+    font-size:12.5px; color:var(--text-faint); background:var(--bg-alt); border:1px dashed var(--line-bright);
+    border-radius:4px; padding:12px 14px; margin-top:10px;
+  }
+  .note b{color:var(--text-dim);}
+  .locked-msg{color:var(--text-faint); font-size:14px; padding:30px 0; text-align:center;}
+  .hide-toggle{
+    display:flex; align-items:center; gap:10px; background:var(--bg-alt);
+    border:1px solid var(--line-bright); border-radius:5px; padding:10px 14px; margin-bottom:16px;
+    font-size:13px; font-weight:700; color:var(--text-dim); cursor:pointer; user-select:none;
+  }
+  .hide-toggle input{display:inline-block; width:16px; height:16px; accent-color:var(--red);}
+  .hide-toggle.on{border-color:var(--red-bright); color:var(--red-bright);}
+  .upload-btn{
+    display:inline-flex; align-items:center; gap:7px; padding:9px 14px; font-size:12.5px; font-weight:700;
+    border:1px solid var(--line-bright); border-radius:4px; color:var(--text-dim); cursor:pointer;
+    background:transparent; transition:all .2s;
+  }
+  .upload-btn:hover{border-color:var(--red-bright); color:var(--red-bright);}
+  .file-chip{
+    display:inline-flex; align-items:center; gap:8px; font-size:12.5px; color:var(--text);
+    background:var(--bg-alt); border:1px solid var(--ok); border-radius:100px; padding:6px 14px; margin-top:8px;
+  }
+  .file-chip .x{cursor:pointer; color:var(--red-bright); font-weight:800;}
+  .drag-handle{color:var(--text-faint); font-size:11px; letter-spacing:0.08em; font-weight:800; margin-bottom:8px;}
+  ::selection{background:var(--red); color:#fff;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sujon Sorma — Admin <span>Dashboard</span></h1>
+  <p class="sub">ওয়েবসাইটের <b>প্রতিটি</b> সেকশন, টেক্সট, লিংক, ছবি, লোগো ও সিভি — সব এখান থেকেই Add / Edit / Delete / Hide করা যাবে। এডিট শেষে "Generate" চাপলেই নতুন <code>index.html</code> ডাউনলোড হবে — কোনো সার্ভার বা কোডিং ছাড়াই।</p>
+
+  <div class="step" id="loadStep">
+    <div class="step-head"><div class="step-num">1</div><h2>বর্তমান ওয়েবসাইট ফাইল লোড করো</h2></div>
+    <p class="desc">তোমার বর্তমান <code>index.html</code> ফাইলটি (যেটি লাইভ সাইটে আছে) এখানে দাও। প্রতিবার আপডেটের পর যে নতুন ফাইলটি ডাউনলোড হবে, পরের বার সেটাই এখানে লোড করবে।</p>
+    <div class="dropzone" id="dropzone">
+      📄 এখানে ফাইল ড্র্যাগ করো, বা ক্লিক করে <b>index.html</b> বেছে নাও
+      <input type="file" id="fileInput" accept=".html,text/html">
+    </div>
+    <div class="file-status empty" id="fileStatus"><span class="dot"></span><span>এখনো কোনো ফাইল লোড করা হয়নি</span></div>
+  </div>
+
+  <div id="editorArea" style="display:none;">
+    <div class="tabs" id="tabBar">
+      <button class="tab active" data-tab="site">⚙️ সাইট সেটিংস</button>
+      <button class="tab" data-tab="hero">✍️ হিরো ও সিভি</button>
+      <button class="tab" data-tab="motionGraphics">🎞 মোশন গ্রাফিক্স <span class="badge-count" id="motionGraphicsCount">0</span></button>
+      <button class="tab" data-tab="videos">🎬 ভিডিও এডিটিং <span class="badge-count" id="videoCount">0</span></button>
+      <button class="tab" data-tab="behance">🖼 বিহান্স <span class="badge-count" id="behanceCount">0</span></button>
+      <button class="tab" data-tab="about">👤 অ্যাবাউট</button>
+      <button class="tab" data-tab="experience">💼 এক্সপেরিয়েন্স <span class="badge-count" id="expCount">0</span></button>
+      <button class="tab" data-tab="orgs">🏢 অর্গানাইজেশন <span class="badge-count" id="orgCount">0</span></button>
+      <button class="tab" data-tab="contact">✉️ কন্টাক্ট</button>
+    </div>
+
+    <div class="panel active" id="panel-site"></div>
+    <div class="panel" id="panel-hero"></div>
+    <div class="panel" id="panel-motionGraphics"></div>
+    <div class="panel" id="panel-videos"></div>
+    <div class="panel" id="panel-behance"></div>
+    <div class="panel" id="panel-about"></div>
+    <div class="panel" id="panel-experience"></div>
+    <div class="panel" id="panel-orgs"></div>
+    <div class="panel" id="panel-contact"></div>
+  </div>
+
+  <div id="lockedMsg" class="locked-msg">উপরে ফাইল লোড করার পর এডিটর এখানে চালু হবে।</div>
+</div>
+
+<div class="gen-bar">
+  <span class="gen-status" id="genStatus">প্রথমে ফাইল লোড করো</span>
+  <button class="btn btn-primary" id="genBtn" disabled>⬇ নতুন index.html জেনারেট ও ডাউনলোড করো</button>
+</div>
+
+<script>
+'use strict';
+let rawHtml = null;
+let D = null; // SITE_DATA
+
+const $ = id => document.getElementById(id);
+const START = '/* ADMIN:SITE_DATA_START */';
+const END = '/* ADMIN:SITE_DATA_END */';
+
+/* ================= file load ================= */
+const fileInput = $('fileInput'), dropzone = $('dropzone'), fileStatus = $('fileStatus');
+dropzone.addEventListener('click', ()=> fileInput.click());
+dropzone.addEventListener('dragover', e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', ()=> dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', e=>{
+  e.preventDefault(); dropzone.classList.remove('drag');
+  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e=>{ if(e.target.files[0]) handleFile(e.target.files[0]); });
+
+function handleFile(file){
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    const text = e.target.result;
+    try{
+      const parsed = parseSiteData(text);
+      rawHtml = text;
+      D = parsed;
+      fileStatus.className = 'file-status';
+      fileStatus.innerHTML = `<span class="dot"></span><span>লোড হয়েছে: <b>${escHtml(file.name)}</b> — নিচে এডিট করো</span>`;
+      $('editorArea').style.display = 'block';
+      $('lockedMsg').style.display = 'none';
+      $('genBtn').disabled = false;
+      $('genStatus').textContent = 'রেডি — এডিট করে জেনারেট করো';
+      renderAll();
+    }catch(err){
+      console.error(err);
+      fileStatus.className = 'file-status err';
+      const legacy = text.includes('ADMIN:VIDEO_DATA_START');
+      fileStatus.innerHTML = `<span class="dot"></span><span>${legacy
+        ? 'এটি পুরনো ভার্সনের index.html — নতুন ডিজাইনের index.html ফাইলটি ব্যবহার করো।'
+        : 'এই ফাইলটি পড়া যায়নি। এটি কি সঠিক (নতুন ভার্সনের) index.html?'}</span>`;
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseSiteData(html){
+  const s = html.indexOf(START), e = html.indexOf(END);
+  if(s === -1 || e === -1) throw new Error('SITE_DATA markers not found');
+  let block = html.slice(s + START.length, e).trim();
+  block = block.replace(/^const SITE_DATA\s*=\s*/, '').replace(/;\s*$/, '');
+  return JSON.parse(block);
+}
+
+/* ================= utils ================= */
+function escHtml(s){ return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escAttr(s){ return escHtml(s).replace(/"/g,'&quot;'); }
+function el(html){
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+function move(arr, i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= arr.length) return false;
+  [arr[i], arr[j]] = [arr[j], arr[i]];
+  return true;
+}
+function kb(dataUrl){ return dataUrl ? Math.round(dataUrl.length * 0.75 / 1024) : 0; }
+
+/* image upload → downscaled base64 data URL */
+function pickImage(opts, cb){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = ()=>{
+    const f = inp.files[0]; if(!f) return;
+    const reader = new FileReader();
+    reader.onload = ev=>{
+      const img = new Image();
+      img.onload = ()=>{
+        const maxW = opts.maxW || 600;
+        const scale = Math.min(1, maxW / img.width);
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale);
+        c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        const isPng = /png|gif|webp|svg/.test(f.type);
+        const dataUrl = isPng ? c.toDataURL('image/png') : c.toDataURL('image/jpeg', 0.85);
+        cb(dataUrl);
+      };
+      img.onerror = ()=> alert('ছবিটি পড়া যায়নি — অন্য ফরম্যাট চেষ্টা করো।');
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+/* any file (CV) → base64 data URL */
+function pickFile(accept, cb){
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = accept;
+  inp.onchange = ()=>{
+    const f = inp.files[0]; if(!f) return;
+    if(f.size > 4 * 1024 * 1024){
+      alert('ফাইলটি ৪MB-এর বেশি — ওয়েবসাইট ভারী হয়ে যাবে। ছোট (কমপ্রেসড) PDF ব্যবহার করো।');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev=> cb(f.name, ev.target.result);
+    reader.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+/* generic field binding */
+function field(labelText, obj, key, opts={}){
+  const full = opts.full ? ' full' : '';
+  const wrap = el(`<div class="field${full}"><label>${labelText}</label></div>`);
+  let input;
+  if(opts.textarea){
+    input = el(`<textarea${opts.minH ? ` style="min-height:${opts.minH}px"` : ''}></textarea>`);
+    input.value = obj[key] ?? '';
+  }else{
+    input = el(`<input type="text" placeholder="${escAttr(opts.placeholder||'')}">`);
+    input.value = obj[key] ?? '';
+  }
+  input.addEventListener('input', ()=>{ obj[key] = input.value; if(opts.onInput) opts.onInput(input.value); });
+  wrap.appendChild(input);
+  return wrap;
+}
+
+/* multi-line list field (one item per line) */
+function linesField(labelText, obj, key, opts={}){
+  const wrap = el(`<div class="field full"><label>${labelText}</label></div>`);
+  const input = el(`<textarea style="min-height:${opts.minH||90}px"></textarea>`);
+  input.value = (obj[key]||[]).join('\n');
+  input.addEventListener('input', ()=>{
+    obj[key] = input.value.split('\n').map(s=>s.trim()).filter(Boolean);
+  });
+  wrap.appendChild(input);
+  return wrap;
+}
+
+/* section hide toggle */
+function hideToggle(sectionKey, labelText){
+  if(!D.sections) D.sections = {};
+  if(!D.sections[sectionKey]) D.sections[sectionKey] = {hidden:false};
+  const sec = D.sections[sectionKey];
+  const wrap = el(`<label class="hide-toggle${sec.hidden?' on':''}">
+    <input type="checkbox" ${sec.hidden?'checked':''}>
+    <span>🙈 ${labelText} — এই সেকশনটি ওয়েবসাইটে লুকিয়ে রাখো (Hide)</span>
+  </label>`);
+  wrap.querySelector('input').addEventListener('change', e=>{
+    sec.hidden = e.target.checked;
+    wrap.classList.toggle('on', sec.hidden);
+  });
+  return wrap;
+}
+
+function stepBox(icon, title, desc){
+  const box = el(`<div class="step">
+    <div class="step-head"><div class="step-num">${icon}</div><h2>${title}</h2></div>
+    ${desc ? `<p class="desc">${desc}</p>` : ''}
+  </div>`);
+  return box;
+}
+
+/* image slot with upload / remove */
+function imageSlot(labelText, obj, key, opts={}){
+  const wrap = el(`<div class="field full"><label>${labelText}</label></div>`);
+  const body = el(`<div></div>`);
+  wrap.appendChild(body);
+  function paint(){
+    body.innerHTML = '';
+    if(obj[key]){
+      const img = el(`<img class="thumb-preview${opts.dark && obj.logoDark ? ' dark' : ''}" src="${escAttr(obj[key])}" alt="preview">`);
+      body.appendChild(img);
+      body.appendChild(el(`<div style="font-size:11.5px; color:var(--text-faint); margin-top:4px;">~${kb(obj[key])} KB</div>`));
+    }
+    const row = el(`<div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;"></div>`);
+    const up = el(`<button type="button" class="upload-btn">⬆ ${obj[key] ? 'ছবি বদলাও' : 'ছবি আপলোড করো'}</button>`);
+    up.addEventListener('click', ()=> pickImage({maxW: opts.maxW || 600}, url=>{ obj[key] = url; paint(); }));
+    row.appendChild(up);
+    if(obj[key] && opts.removable){
+      const rm = el(`<button type="button" class="icon-btn danger">✕ ছবি মুছে ফেলো</button>`);
+      rm.addEventListener('click', ()=>{ obj[key] = ''; paint(); });
+      row.appendChild(rm);
+    }
+    body.appendChild(row);
+  }
+  paint();
+  return wrap;
+}
+
+/* ================= panels ================= */
+function renderAll(){
+  renderSite(); renderHero(); renderMotionGraphics(); renderVideos(); renderBehance();
+  renderAbout(); renderExperience(); renderOrgs(); renderContact();
+}
+
+/* ---- 1. site settings ---- */
+function renderSite(){
+  const p = $('panel-site'); p.innerHTML = '';
+
+  const b1 = stepBox('🏷', 'ব্র্যান্ড ও SEO', 'নাম/লোগো টেক্সট এবং ব্রাউজার ট্যাবে যা দেখা যায়।');
+  const g1 = el(`<div class="settings-grid"></div>`);
+  g1.appendChild(field('নামের প্রথম অংশ (উজ্জ্বল)', D.brand, 'first'));
+  g1.appendChild(field('নামের শেষ অংশ (হালকা)', D.brand, 'last'));
+  g1.appendChild(field('পেজ টাইটেল (ব্রাউজার ট্যাব / Google)', D.meta, 'title', {full:true}));
+  g1.appendChild(field('Meta description (Google-এ যা দেখা যায়)', D.meta, 'description', {full:true, textarea:true}));
+  g1.appendChild(field('ফুটার টেক্সট (© সালের পরে)', D.footer, 'text', {full:true}));
+  b1.appendChild(g1);
+  p.appendChild(b1);
+
+  const b2 = stepBox('💬', 'হোয়াটসঅ্যাপ', 'সাইটের সব WhatsApp বাটন এই নম্বরে যাবে।');
+  const g2 = el(`<div class="settings-grid"></div>`);
+  g2.appendChild(field('WhatsApp নম্বর (দেশের কোড সহ, শুধু সংখ্যা)', D.wa, 'number', {placeholder:'8801XXXXXXXXX'}));
+  g2.appendChild(field('প্রি-ফিল করা মেসেজ', D.wa, 'text', {full:true, textarea:true}));
+  b2.appendChild(g2);
+  p.appendChild(b2);
+}
+
+/* ---- 2. hero + CV ---- */
+function renderHero(){
+  const p = $('panel-hero'); p.innerHTML = '';
+
+  const b1 = stepBox('✍️', 'হিরো সেকশনের টেক্সট');
+  const g1 = el(`<div class="settings-grid"></div>`);
+  g1.appendChild(field('Eyebrow ট্যাগলাইন (নামের ওপরে ছোট টেক্সট)', D.hero, 'eyebrow', {full:true}));
+  g1.appendChild(field('বড় টাইটেল (HTML চলবে, যেমন &lt;br&gt; ও &lt;span class="accent"&gt;)', D.hero, 'titleHtml', {full:true}));
+  g1.appendChild(field('Role লাইন (HTML চলবে, যেমন &lt;b&gt;move&lt;/b&gt;)', D.hero, 'roleHtml', {full:true}));
+  g1.appendChild(field('বর্ণনা (Description)', D.hero, 'desc', {full:true, textarea:true, minH:90}));
+  b1.appendChild(g1);
+  p.appendChild(b1);
+
+  const b2 = stepBox('📷', 'প্রোফাইল ছবি', 'হিরো সেকশনের মনিটর ফ্রেমের ছবি। আপলোড করলেই ফাইলের ভেতরে বসে যাবে।');
+  b2.appendChild(imageSlot('বর্তমান ছবি', D.hero, 'photo', {maxW:800}));
+  p.appendChild(b2);
+
+  const b3 = stepBox('⭐', 'কী স্কিলস (রিক্রুটার হাইলাইট)', 'হিরো সেকশনে চিপ আকারে দেখা যায় — রিক্রুটাররা প্রথমেই এগুলো খোঁজে। প্রতি লাইনে একটি স্কিল।');
+  b3.appendChild(linesField('স্কিল তালিকা', D.hero, 'skills', {minH:120}));
+  p.appendChild(b3);
+
+  const b4 = stepBox('📄', 'সিভি / রেজিউমে', 'আপলোড করা সর্বশেষ সিভিটিই সাইটের সব "Download CV" বাটনে যুক্ত হবে। PDF ব্যবহার করাই ভালো।');
+  if(!D.cv) D.cv = {fileName:'', dataUrl:''};
+  const cvBody = el(`<div></div>`);
+  function paintCv(){
+    cvBody.innerHTML = '';
+    if(D.cv.dataUrl){
+      const chip = el(`<span class="file-chip">📄 ${escHtml(D.cv.fileName||'CV')} (~${kb(D.cv.dataUrl)} KB) <span class="x" title="মুছে ফেলো">✕</span></span>`);
+      chip.querySelector('.x').addEventListener('click', ()=>{ D.cv = {fileName:'', dataUrl:''}; paintCv(); });
+      cvBody.appendChild(chip);
+      cvBody.appendChild(el(`<div class="note">✓ সিভি যুক্ত আছে — সাইটে নেভবার, হিরো ও কন্টাক্ট সেকশনে "Download CV" বাটন দেখা যাবে।</div>`));
+    }else{
+      cvBody.appendChild(el(`<div class="note">এখনো কোনো সিভি আপলোড করা হয়নি — সাইটে "Download CV" বাটন লুকানো থাকবে।</div>`));
+    }
+    const up = el(`<button type="button" class="upload-btn" style="margin-top:10px;">⬆ ${D.cv.dataUrl ? 'নতুন সিভি দিয়ে বদলাও' : 'সিভি আপলোড করো'}</button>`);
+    up.addEventListener('click', ()=> pickFile('.pdf,.doc,.docx', (name, url)=>{ D.cv = {fileName:name, dataUrl:url}; paintCv(); }));
+    cvBody.appendChild(up);
+  }
+  paintCv();
+  b4.appendChild(cvBody);
+  p.appendChild(b4);
+}
+
+/* ---- 3. videos ---- */
+function extractYoutubeId(url){
+  if(!url) return '';
+  url = url.trim();
+  const patterns = [
+    /youtu\.be\/([A-Za-z0-9_-]{6,})/,
+    /[?&]v=([A-Za-z0-9_-]{6,})/,
+    /youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/,
+    /youtube\.com\/embed\/([A-Za-z0-9_-]{6,})/
+  ];
+  for(const p of patterns){ const m = url.match(p); if(m) return m[1]; }
+  if(/^[A-Za-z0-9_-]{6,15}$/.test(url)) return url;
+  return '';
+}
+
+function renderMotionGraphics(){
+  if(!D.motionGraphics) D.motionGraphics = {tag:'Motion Reel', title:'Motion Graphics', sub:'', seeMore:{label:'', url:''}, items:[]};
+  const p = $('panel-motionGraphics'); p.innerHTML = '';
+  p.appendChild(hideToggle('motionGraphics', 'মোশন গ্রাফিক্স'));
+
+  const bh = stepBox('🎞', 'সেকশন হেডিং');
+  const gh = el(`<div class="settings-grid"></div>`);
+  gh.appendChild(field('ছোট ট্যাগ (টাইটেলের ওপরে)', D.motionGraphics, 'tag'));
+  gh.appendChild(field('সেকশন টাইটেল (নেভবারেও এটাই)', D.motionGraphics, 'title'));
+  gh.appendChild(field('সাব-টেক্সট', D.motionGraphics, 'sub', {full:true, textarea:true}));
+  bh.appendChild(gh);
+  p.appendChild(bh);
+
+  const bm = stepBox('🔗', '"See more" বাটন', 'মোশন গ্রাফিক্স সেকশনের নিচের বাটন — Google Doc বা যেকোনো লিংকে যাবে। URL খালি রাখলে বাটন লুকানো থাকবে।');
+  const gm = el(`<div class="settings-grid"></div>`);
+  if(!D.motionGraphics.seeMore) D.motionGraphics.seeMore = {label:'See more →', url:''};
+  gm.appendChild(field('বাটনের লেখা', D.motionGraphics.seeMore, 'label'));
+  gm.appendChild(field('লিংক (URL)', D.motionGraphics.seeMore, 'url', {placeholder:'https://docs.google.com/...'}));
+  bm.appendChild(gm);
+  p.appendChild(bm);
+
+  const bl = stepBox('▶', 'ভিডিও তালিকা', 'তালিকার ১ নম্বরটি বড় "Hero Video", ২–৩ নম্বর "Sub-hero", বাকিগুলো গ্রিডে। YouTube লিংক পেস্ট করলেই ভিডিও আইডি নিজে থেকে বসে যাবে।');
+  const list = el(`<div></div>`);
+  function paintList(){
+    list.innerHTML = '';
+    $('motionGraphicsCount').textContent = D.motionGraphics.items.length;
+    D.motionGraphics.items.forEach((v, i)=>{
+      const role = i===0 ? '🔴 HERO VIDEO' : (i<=2 ? '🟠 SUB-HERO' : '⚪ GRID');
+      const card = el(`<div class="card-item">
+        <div class="drag-handle">#${String(i+1).padStart(2,'0')} · ${role}</div>
+      </div>`);
+      const r1 = el(`<div class="row"></div>`);
+      const fUrl = field('YouTube লিংক', v, 'url', {full:true, placeholder:'https://youtu.be/xxxxxxxxxxx', onInput:(val)=>{
+        const id = extractYoutubeId(val);
+        if(id && id !== v.id){ v.id = id; paintList(); }
+      }});
+      r1.appendChild(fUrl);
+      card.appendChild(r1);
+      const r2 = el(`<div class="row"></div>`);
+      r2.appendChild(field('টাইটেল (YouTube থেকে লাইভ টাইটেল এলে সেটিই দেখাবে)', v, 'title'));
+      r2.appendChild(field('ট্যাগ / ক্যাটাগরি', v, 'tag', {placeholder:'Motion Graphics'}));
+      card.appendChild(r2);
+      if(v.id) card.appendChild(el(`<img class="thumb-preview" src="https://i.ytimg.com/vi/${escAttr(v.id)}/hqdefault.jpg" alt="thumbnail">`));
+      const tb = el(`<div class="card-toolbar">
+        <button class="icon-btn" data-act="up">↑ ওপরে</button>
+        <button class="icon-btn" data-act="down">↓ নিচে</button>
+        <button class="icon-btn danger" data-act="del">✕ মুছে ফেলো</button>
+      </div>`);
+      tb.querySelector('[data-act="up"]').addEventListener('click', ()=>{ if(move(D.motionGraphics.items, i, -1)) paintList(); });
+      tb.querySelector('[data-act="down"]').addEventListener('click', ()=>{ if(move(D.motionGraphics.items, i, 1)) paintList(); });
+      tb.querySelector('[data-act="del"]').addEventListener('click', ()=>{ D.motionGraphics.items.splice(i,1); paintList(); });
+      card.appendChild(tb);
+      list.appendChild(card);
+    });
+  }
+  paintList();
+  bl.appendChild(list);
+  const add = el(`<button class="add-row">+ নতুন ভিডিও যোগ করো</button>`);
+  add.addEventListener('click', ()=>{ D.motionGraphics.items.push({id:'', url:'', title:'নতুন ভিডিও', tag:'Motion Graphics'}); paintList(); });
+  bl.appendChild(add);
+  p.appendChild(bl);
+}
+
+function renderVideos(){
+  const p = $('panel-videos'); p.innerHTML = '';
+  p.appendChild(hideToggle('videos', 'ভিডিও এডিটিং'));
+
+  const bh = stepBox('🎬', 'সেকশন হেডিং');
+  const gh = el(`<div class="settings-grid"></div>`);
+  gh.appendChild(field('ছোট ট্যাগ (টাইটেলের ওপরে)', D.videos, 'tag'));
+  gh.appendChild(field('সেকশন টাইটেল (নেভবারেও এটাই)', D.videos, 'title'));
+  gh.appendChild(field('সাব-টেক্সট', D.videos, 'sub', {full:true, textarea:true}));
+  bh.appendChild(gh);
+  p.appendChild(bh);
+
+  const bm = stepBox('🔗', '"See more" বাটন', 'ভিডিও সেকশনের নিচের বাটন — Google Doc বা যেকোনো লিংকে যাবে। URL খালি রাখলে বাটন লুকানো থাকবে।');
+  const gm = el(`<div class="settings-grid"></div>`);
+  if(!D.videos.seeMore) D.videos.seeMore = {label:'See more →', url:''};
+  gm.appendChild(field('বাটনের লেখা', D.videos.seeMore, 'label'));
+  gm.appendChild(field('লিংক (URL)', D.videos.seeMore, 'url', {placeholder:'https://docs.google.com/...'}));
+  bm.appendChild(gm);
+  p.appendChild(bm);
+
+  const bl = stepBox('▶', 'ভিডিও তালিকা', 'তালিকার ১ নম্বরটি বড় "Hero Video", ২–৩ নম্বর "Sub-hero", বাকিগুলো গ্রিডে। YouTube লিংক পেস্ট করলেই ভিডিও আইডি নিজে থেকে বসে যাবে।');
+  const list = el(`<div></div>`);
+  function paintList(){
+    list.innerHTML = '';
+    $('videoCount').textContent = D.videos.items.length;
+    D.videos.items.forEach((v, i)=>{
+      const role = i===0 ? '🔴 HERO VIDEO' : (i<=2 ? '🟠 SUB-HERO' : '⚪ GRID');
+      const card = el(`<div class="card-item">
+        <div class="drag-handle">#${String(i+1).padStart(2,'0')} · ${role}</div>
+      </div>`);
+      const r1 = el(`<div class="row"></div>`);
+      const fUrl = field('YouTube লিংক', v, 'url', {full:true, placeholder:'https://youtu.be/xxxxxxxxxxx', onInput:(val)=>{
+        const id = extractYoutubeId(val);
+        if(id && id !== v.id){ v.id = id; paintList(); }
+      }});
+      r1.appendChild(fUrl);
+      card.appendChild(r1);
+      const r2 = el(`<div class="row"></div>`);
+      r2.appendChild(field('টাইটেল (YouTube থেকে লাইভ টাইটেল এলে সেটিই দেখাবে)', v, 'title'));
+      r2.appendChild(field('ট্যাগ / ক্যাটাগরি', v, 'tag', {placeholder:'Video Editing'}));
+      card.appendChild(r2);
+      if(v.id) card.appendChild(el(`<img class="thumb-preview" src="https://i.ytimg.com/vi/${escAttr(v.id)}/hqdefault.jpg" alt="thumbnail">`));
+      const tb = el(`<div class="card-toolbar">
+        <button class="icon-btn" data-act="up">↑ ওপরে</button>
+        <button class="icon-btn" data-act="down">↓ নিচে</button>
+        <button class="icon-btn danger" data-act="del">✕ মুছে ফেলো</button>
+      </div>`);
+      tb.querySelector('[data-act="up"]').addEventListener('click', ()=>{ if(move(D.videos.items, i, -1)) paintList(); });
+      tb.querySelector('[data-act="down"]').addEventListener('click', ()=>{ if(move(D.videos.items, i, 1)) paintList(); });
+      tb.querySelector('[data-act="del"]').addEventListener('click', ()=>{ D.videos.items.splice(i,1); paintList(); });
+      card.appendChild(tb);
+      list.appendChild(card);
+    });
+  }
+  paintList();
+  bl.appendChild(list);
+  const add = el(`<button class="add-row">+ নতুন ভিডিও যোগ করো</button>`);
+  add.addEventListener('click', ()=>{ D.videos.items.push({id:'', url:'', title:'নতুন ভিডিও', tag:'Video Editing'}); paintList(); });
+  bl.appendChild(add);
+  p.appendChild(bl);
+}
+
+/* ---- 4. behance ---- */
+function renderBehance(){
+  const p = $('panel-behance'); p.innerHTML = '';
+  p.appendChild(hideToggle('behance', 'বিহান্স পোর্টফোলিও'));
+
+  const bh = stepBox('🖼', 'সেকশন হেডিং ও প্রোফাইল লিংক');
+  const gh = el(`<div class="settings-grid"></div>`);
+  gh.appendChild(field('ছোট ট্যাগ', D.behance, 'tag'));
+  gh.appendChild(field('সেকশন টাইটেল (নেভবারেও এটাই)', D.behance, 'title'));
+  gh.appendChild(field('সাব-টেক্সট', D.behance, 'sub', {full:true, textarea:true}));
+  gh.appendChild(field('Behance প্রোফাইল URL ("View Full Behance Profile" বাটন)', D.behance, 'profileUrl', {full:true, placeholder:'https://www.behance.net/...'}));
+  bh.appendChild(gh);
+  p.appendChild(bh);
+
+  const bl = stepBox('🎨', 'প্রজেক্ট তালিকা', 'তালিকার ১ নম্বরটি বড় "Hero", ২–৩ নম্বর "Sub-hero", বাকিগুলো গ্রিডে। নতুন কাজ সবার ওপরে যোগ করো — টাইটেল থাম্বনেইলের নিচে সলিড ব্যাকগ্রাউন্ডে দেখা যাবে।');
+  const list = el(`<div></div>`);
+  function paintList(){
+    list.innerHTML = '';
+    $('behanceCount').textContent = D.behance.items.length;
+    D.behance.items.forEach((g, i)=>{
+      const role = i===0 ? '🔴 HERO' : (i<=2 ? '🟠 SUB-HERO' : '⚪ GRID');
+      const card = el(`<div class="card-item"><div class="drag-handle">#${String(i+1).padStart(2,'0')} · ${role}</div></div>`);
+      const r1 = el(`<div class="row"></div>`);
+      r1.appendChild(field('টাইটেল', g, 'title', {full:true}));
+      card.appendChild(r1);
+      const r2 = el(`<div class="row"></div>`);
+      r2.appendChild(field('ক্যাটাগরি', g, 'cat', {placeholder:'Social Media Design'}));
+      r2.appendChild(field('বিহান্স প্রজেক্ট লিংক', g, 'link', {placeholder:'https://www.behance.net/gallery/...'}));
+      card.appendChild(r2);
+      const r3 = el(`<div class="row"></div>`);
+      r3.appendChild(field('কভার ইমেজ URL (Behance থেকে কপি করো)', g, 'img', {full:true, placeholder:'https://mir-s3-cdn-cf.behance.net/...', onInput:()=>{}}));
+      card.appendChild(r3);
+      if(g.img) card.appendChild(el(`<img class="thumb-preview" src="${escAttr(g.img)}" alt="cover">`));
+      const upRow = el(`<div style="margin-top:8px;"></div>`);
+      const up = el(`<button type="button" class="upload-btn">⬆ অথবা নিজের কম্পিউটার থেকে কভার ছবি আপলোড করো</button>`);
+      up.addEventListener('click', ()=> pickImage({maxW:800}, url=>{ g.img = url; paintList(); }));
+      upRow.appendChild(up);
+      card.appendChild(upRow);
+      const tb = el(`<div class="card-toolbar">
+        <button class="icon-btn" data-act="up">↑ ওপরে</button>
+        <button class="icon-btn" data-act="down">↓ নিচে</button>
+        <button class="icon-btn danger" data-act="del">✕ মুছে ফেলো</button>
+      </div>`);
+      tb.querySelector('[data-act="up"]').addEventListener('click', ()=>{ if(move(D.behance.items, i, -1)) paintList(); });
+      tb.querySelector('[data-act="down"]').addEventListener('click', ()=>{ if(move(D.behance.items, i, 1)) paintList(); });
+      tb.querySelector('[data-act="del"]').addEventListener('click', ()=>{ D.behance.items.splice(i,1); paintList(); });
+      card.appendChild(tb);
+      list.appendChild(card);
+    });
+  }
+  paintList();
+  bl.appendChild(list);
+  const add = el(`<button class="add-row">+ নতুন প্রজেক্ট যোগ করো (সবার ওপরে)</button>`);
+  add.addEventListener('click', ()=>{ D.behance.items.unshift({title:'নতুন প্রজেক্ট', cat:'', img:'', link:''}); paintList(); });
+  bl.appendChild(add);
+  p.appendChild(bl);
+}
+
+/* ---- 5. about ---- */
+function renderAbout(){
+  const p = $('panel-about'); p.innerHTML = '';
+  p.appendChild(hideToggle('about', 'অ্যাবাউট'));
+
+  const bh = stepBox('👤', 'অ্যাবাউট সেকশন');
+  const gh = el(`<div class="settings-grid"></div>`);
+  gh.appendChild(field('ছোট ট্যাগ', D.about, 'tag'));
+  gh.appendChild(field('সেকশন টাইটেল', D.about, 'title'));
+  bh.appendChild(gh);
+  bh.appendChild(linesField('প্যারাগ্রাফ (প্রতি লাইনে একটি প্যারা)', D.about, 'paragraphs', {minH:140}));
+  p.appendChild(bh);
+
+  const bs = stepBox('📊', 'স্ট্যাট (সংখ্যা হাইলাইট)');
+  const statList = el(`<div></div>`);
+  function paintStats(){
+    statList.innerHTML = '';
+    (D.about.stats||[]).forEach((s, i)=>{
+      const card = el(`<div class="card-item"></div>`);
+      const r = el(`<div class="row"></div>`);
+      r.appendChild(field('সংখ্যা (যেমন 4+)', s, 'n'));
+      r.appendChild(field('লেবেল', s, 'l'));
+      card.appendChild(r);
+      const tb = el(`<div class="card-toolbar"><button class="icon-btn danger">✕ মুছে ফেলো</button></div>`);
+      tb.querySelector('button').addEventListener('click', ()=>{ D.about.stats.splice(i,1); paintStats(); });
+      card.appendChild(tb);
+      statList.appendChild(card);
+    });
+  }
+  paintStats();
+  bs.appendChild(statList);
+  const addStat = el(`<button class="add-row">+ নতুন স্ট্যাট</button>`);
+  addStat.addEventListener('click', ()=>{ D.about.stats.push({n:'', l:''}); paintStats(); });
+  bs.appendChild(addStat);
+  p.appendChild(bs);
+
+  const bw = stepBox('🛠', 'সফটওয়্যার তালিকা', 'আইকন নামটি simpleicons.org-এর slug (যেমন adobepremierepro, adobeaftereffects, davinciresolve, blender)।');
+  const swList = el(`<div></div>`);
+  function paintSw(){
+    swList.innerHTML = '';
+    (D.about.software||[]).forEach((s, i)=>{
+      const card = el(`<div class="card-item"></div>`);
+      const r = el(`<div class="row r3"></div>`);
+      r.appendChild(field('আইকন slug', s, 'icon', {placeholder:'adobepremierepro'}));
+      r.appendChild(field('নাম', s, 'name'));
+      r.appendChild(field('ছোট বর্ণনা', s, 'desc'));
+      card.appendChild(r);
+      const tb = el(`<div class="card-toolbar">
+        <button class="icon-btn" data-act="up">↑</button>
+        <button class="icon-btn" data-act="down">↓</button>
+        <button class="icon-btn danger" data-act="del">✕ মুছে ফেলো</button>
+      </div>`);
+      tb.querySelector('[data-act="up"]').addEventListener('click', ()=>{ if(move(D.about.software, i, -1)) paintSw(); });
+      tb.querySelector('[data-act="down"]').addEventListener('click', ()=>{ if(move(D.about.software, i, 1)) paintSw(); });
+      tb.querySelector('[data-act="del"]').addEventListener('click', ()=>{ D.about.software.splice(i,1); paintSw(); });
+      card.appendChild(tb);
+      swList.appendChild(card);
+    });
+  }
+  paintSw();
+  bw.appendChild(swList);
+  const addSw = el(`<button class="add-row">+ নতুন সফটওয়্যার</button>`);
+  addSw.addEventListener('click', ()=>{ D.about.software.push({icon:'', name:'', desc:''}); paintSw(); });
+  bw.appendChild(addSw);
+  p.appendChild(bw);
+}
+
+/* ---- 6. experience ---- */
+function renderExperience(){
+  const p = $('panel-experience'); p.innerHTML = '';
+  p.appendChild(hideToggle('experience', 'এক্সপেরিয়েন্স'));
+
+  const bh = stepBox('💼', 'সেকশন হেডিং');
+  const gh = el(`<div class="settings-grid"></div>`);
+  gh.appendChild(field('ছোট ট্যাগ', D.experience, 'tag'));
+  gh.appendChild(field('সেকশন টাইটেল', D.experience, 'title'));
+  gh.appendChild(field('সাব-টেক্সট', D.experience, 'sub', {full:true}));
+  bh.appendChild(gh);
+  p.appendChild(bh);
+
+  const bl = stepBox('🗂', 'চাকরি / অভিজ্ঞতা তালিকা', 'প্রতিটি অভিজ্ঞতায় কোম্পানির লোগো আপলোড/বদলানো যাবে। বুলেট পয়েন্ট প্রতি লাইনে একটি।');
+  const list = el(`<div></div>`);
+  function paintList(){
+    list.innerHTML = '';
+    $('expCount').textContent = D.experience.items.length;
+    D.experience.items.forEach((job, i)=>{
+      const card = el(`<div class="card-item"><div class="drag-handle">#${String(i+1).padStart(2,'0')}</div></div>`);
+      const r1 = el(`<div class="row"></div>`);
+      r1.appendChild(field('সময়কাল (যেমন SEP 2025 — PRESENT)', job, 'period'));
+      r1.appendChild(field('পদবি (Role)', job, 'role'));
+      card.appendChild(r1);
+      const r2 = el(`<div class="row"></div>`);
+      r2.appendChild(field('প্রতিষ্ঠান (Organization)', job, 'org', {full:true}));
+      card.appendChild(r2);
+      card.appendChild(linesField('দায়িত্ব / কাজ (প্রতি লাইনে একটি বুলেট)', job, 'bullets', {minH:100}));
+
+      const cur = el(`<label class="hide-toggle" style="margin-top:10px; ${job.current?'border-color:var(--ok); color:var(--ok);':''}">
+        <input type="checkbox" ${job.current?'checked':''}>
+        <span>🟢 এটি আমার বর্তমান চাকরি (টাইমলাইনে হাইলাইট হবে)</span>
+      </label>`);
+      cur.querySelector('input').addEventListener('change', e=>{ job.current = e.target.checked; paintList(); });
+      card.appendChild(cur);
+
+      const dk = el(`<label class="hide-toggle" style="${job.logoDark?'border-color:var(--red-bright); color:var(--red-bright);':''}">
+        <input type="checkbox" ${job.logoDark?'checked':''}>
+        <span>🌑 লোগোর পেছনে গাঢ় ব্যাকগ্রাউন্ড দরকার (সাদা লোগোর জন্য)</span>
+      </label>`);
+      dk.querySelector('input').addEventListener('change', e=>{ job.logoDark = e.target.checked; paintList(); });
+      card.appendChild(dk);
+
+      card.appendChild(imageSlot('কোম্পানি লোগো', job, 'logo', {maxW:400, removable:true, dark:true}));
+
+      const tb = el(`<div class="card-toolbar">
+        <button class="icon-btn" data-act="up">↑ ওপরে</button>
+        <button class="icon-btn" data-act="down">↓ নিচে</button>
+        <button class="icon-btn danger" data-act="del">✕ মুছে ফেলো</button>
+      </div>`);
+      tb.querySelector('[data-act="up"]').addEventListener('click', ()=>{ if(move(D.experience.items, i, -1)) paintList(); });
+      tb.querySelector('[data-act="down"]').addEventListener('click', ()=>{ if(move(D.experience.items, i, 1)) paintList(); });
+      tb.querySelector('[data-act="del"]').addEventListener('click', ()=>{ D.experience.items.splice(i,1); paintList(); });
+      card.appendChild(tb);
+      list.appendChild(card);
+    });
+  }
+  paintList();
+  bl.appendChild(list);
+  const add = el(`<button class="add-row">+ নতুন অভিজ্ঞতা যোগ করো</button>`);
+  add.addEventListener('click', ()=>{
+    D.experience.items.unshift({period:'', role:'', org:'', logo:'', logoDark:false, current:false, bullets:[]});
+    paintList();
+  });
+  bl.appendChild(add);
+  p.appendChild(bl);
+}
+
+/* ---- 7. organizations ---- */
+function renderOrgs(){
+  const p = $('panel-orgs'); p.innerHTML = '';
+  p.appendChild(hideToggle('orgs', 'অর্গানাইজেশনস'));
+
+  const bh = stepBox('🏢', 'সেকশন হেডিং');
+  const gh = el(`<div class="settings-grid"></div>`);
+  gh.appendChild(field('ছোট ট্যাগ', D.orgs, 'tag'));
+  gh.appendChild(field('সেকশন টাইটেল', D.orgs, 'title'));
+  bh.appendChild(gh);
+  p.appendChild(bh);
+
+  const bl = stepBox('🖼', 'লোগো তালিকা', 'যেসব প্রতিষ্ঠানে কাজ করেছো তাদের লোগো — Add / Edit / Delete সব করা যাবে।');
+  const list = el(`<div></div>`);
+  function paintList(){
+    list.innerHTML = '';
+    $('orgCount').textContent = D.orgs.items.length;
+    D.orgs.items.forEach((o, i)=>{
+      const card = el(`<div class="card-item"></div>`);
+      const r = el(`<div class="row"></div>`);
+      r.appendChild(field('প্রতিষ্ঠানের নাম', o, 'name', {full:true}));
+      card.appendChild(r);
+      card.appendChild(imageSlot('লোগো', o, 'logo', {maxW:400, removable:true}));
+      const tb = el(`<div class="card-toolbar">
+        <button class="icon-btn" data-act="up">↑ ওপরে</button>
+        <button class="icon-btn" data-act="down">↓ নিচে</button>
+        <button class="icon-btn danger" data-act="del">✕ মুছে ফেলো</button>
+      </div>`);
+      tb.querySelector('[data-act="up"]').addEventListener('click', ()=>{ if(move(D.orgs.items, i, -1)) paintList(); });
+      tb.querySelector('[data-act="down"]').addEventListener('click', ()=>{ if(move(D.orgs.items, i, 1)) paintList(); });
+      tb.querySelector('[data-act="del"]').addEventListener('click', ()=>{ D.orgs.items.splice(i,1); paintList(); });
+      card.appendChild(tb);
+      list.appendChild(card);
+    });
+  }
+  paintList();
+  bl.appendChild(list);
+  const add = el(`<button class="add-row">+ নতুন প্রতিষ্ঠান যোগ করো</button>`);
+  add.addEventListener('click', ()=>{ D.orgs.items.push({name:'', logo:''}); paintList(); });
+  bl.appendChild(add);
+  p.appendChild(bl);
+}
+
+/* ---- 8. contact ---- */
+function renderContact(){
+  const p = $('panel-contact'); p.innerHTML = '';
+  p.appendChild(hideToggle('contact', 'কন্টাক্ট'));
+
+  const bh = stepBox('✉️', 'কন্টাক্ট সেকশন');
+  const gh = el(`<div class="settings-grid"></div>`);
+  gh.appendChild(field('নেভবারে যে নাম দেখাবে', D.contact, 'navLabel', {placeholder:'Contact'}));
+  gh.appendChild(field('বড় টাইটেল (HTML চলবে, &lt;span&gt; অংশ লাল হবে)', D.contact, 'titleHtml'));
+  gh.appendChild(field('বর্ণনা', D.contact, 'desc', {full:true, textarea:true}));
+  gh.appendChild(field('ইমেইল', D.contact, 'email', {placeholder:'you@example.com'}));
+  gh.appendChild(field('ফোন (যেভাবে দেখাবে)', D.contact, 'phoneDisplay', {placeholder:'+880 1XXX-XXXXXX'}));
+  gh.appendChild(field('ফোন (tel: লিংকের জন্য, + সহ, স্পেস ছাড়া)', D.contact, 'phoneHref', {placeholder:'+8801XXXXXXXXX'}));
+  gh.appendChild(field('ঠিকানা', D.contact, 'address', {full:true}));
+  bh.appendChild(gh);
+  p.appendChild(bh);
+
+  const bs = stepBox('🔗', 'সোশ্যাল লিংক', 'আইকন: facebook, linkedin, behance, youtube, instagram — এর যেকোনোটি। URL খালি রাখলে আইকনটি দেখাবে না।');
+  const list = el(`<div></div>`);
+  const ICONS = ['facebook','linkedin','behance','youtube','instagram'];
+  function paintList(){
+    list.innerHTML = '';
+    (D.contact.socials||[]).forEach((s, i)=>{
+      const card = el(`<div class="card-item"></div>`);
+      const r = el(`<div class="row r3"></div>`);
+      const iconField = el(`<div class="field"><label>আইকন</label></div>`);
+      const sel = el(`<select>${ICONS.map(ic=>`<option value="${ic}" ${s.icon===ic?'selected':''}>${ic}</option>`).join('')}</select>`);
+      sel.addEventListener('change', ()=>{ s.icon = sel.value; });
+      iconField.appendChild(sel);
+      r.appendChild(iconField);
+      r.appendChild(field('লেবেল (accessibility)', s, 'label'));
+      r.appendChild(field('URL', s, 'url', {placeholder:'https://...'}));
+      card.appendChild(r);
+      const tb = el(`<div class="card-toolbar"><button class="icon-btn danger">✕ মুছে ফেলো</button></div>`);
+      tb.querySelector('button').addEventListener('click', ()=>{ D.contact.socials.splice(i,1); paintList(); });
+      card.appendChild(tb);
+      list.appendChild(card);
+    });
+  }
+  paintList();
+  bs.appendChild(list);
+  const add = el(`<button class="add-row">+ নতুন সোশ্যাল লিংক</button>`);
+  add.addEventListener('click', ()=>{ D.contact.socials.push({icon:'facebook', label:'', url:''}); paintList(); });
+  bs.appendChild(add);
+  p.appendChild(bs);
+}
+
+/* ================= tabs ================= */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(pn=>pn.classList.remove('active'));
+    tab.classList.add('active');
+    $('panel-'+tab.dataset.tab).classList.add('active');
+  });
+});
+
+/* ================= generation ================= */
+$('genBtn').addEventListener('click', ()=>{
+  if(!rawHtml || !D) return;
+  const s = rawHtml.indexOf(START);
+  const e = rawHtml.indexOf(END, s);
+  if(s === -1 || e === -1){
+    $('genStatus').textContent = '⚠ ফাইলে SITE_DATA মার্কার পাওয়া যায়নি';
+    return;
+  }
+  let json = JSON.stringify(D, null, 2);
+  json = json.replace(/<\//g, '<\\/'); // keep closing-tag sequences safe inside the HTML
+  const block = START + '\nconst SITE_DATA = ' + json + ';\n' + END;
+  const out = rawHtml.slice(0, s) + block + rawHtml.slice(e + END.length);
+
+  const blob = new Blob([out], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'index.html';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  rawHtml = out; // keep the tool in sync with what was just generated
+  $('genStatus').textContent = '✓ নতুন index.html ডাউনলোড হয়েছে — এটাকেই এখন পুরনোটার জায়গায় আপলোড করো';
+});
+</script>
+</body>
+</html>
